@@ -1,0 +1,992 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  Briefcase,
+  Calendar,
+  Clock,
+  FileText,
+  Upload,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Users,
+  Building2,
+  Lock,
+  MessageSquare,
+  Send,
+} from "lucide-react";
+import { Layout } from "@/components/layout/Layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+
+// Mock data
+const mockProcessos = [
+  {
+    id: "1",
+    titulo: "Processo Seletivo - Saúde e Educação 2026",
+    secretaria: "Múltiplas Secretarias",
+    dataAbertura: "2026-01-10",
+    dataEncerramento: "2026-02-10",
+    status: "aberto",
+    vagas: [
+      {
+        id: "1-1",
+        cargo: "Agente Comunitário de Saúde",
+        secretaria: "Secretaria de Saúde",
+        quantidade: 15,
+        salario: "R$ 1.800,00",
+        cargaHoraria: "40h semanais",
+        requisitos: [
+          "Ensino Médio completo",
+          "Residir na área de atuação",
+          "Idade mínima de 18 anos",
+          "CNH categoria A ou B",
+        ],
+      },
+      {
+        id: "1-2",
+        cargo: "Professor de Educação Infantil",
+        secretaria: "Secretaria de Educação",
+        quantidade: 10,
+        salario: "R$ 2.500,00",
+        cargaHoraria: "30h semanais",
+        requisitos: [
+          "Licenciatura em Pedagogia",
+          "Registro no MEC",
+          "Experiência mínima de 1 ano na área",
+        ],
+      },
+      {
+        id: "1-3",
+        cargo: "Motorista",
+        secretaria: "Secretaria de Educação",
+        quantidade: 15,
+        salario: "R$ 2.200,00",
+        cargaHoraria: "40h semanais",
+        requisitos: [
+          "Ensino Fundamental completo",
+          "CNH categoria D",
+          "Experiência em transporte escolar",
+        ],
+      },
+      {
+        id: "1-4",
+        cargo: "Enfermeiro",
+        secretaria: "Secretaria de Saúde",
+        quantidade: 13,
+        salario: "R$ 3.500,00",
+        cargaHoraria: "30h semanais",
+        requisitos: [
+          "Curso superior em Enfermagem",
+          "Registro no COREN",
+          "Experiência mínima de 2 anos",
+        ],
+      },
+    ],
+    descricao: "Processo seletivo para contratação temporária em diversas áreas da saúde e educação municipal.",
+    editalUrl: "#",
+    documentosNecessarios: [
+      "RG e CPF",
+      "Comprovante de residência",
+      "Certificado de escolaridade",
+      "CNH (quando aplicável)",
+      "Título de eleitor",
+      "Registro profissional (quando aplicável)",
+    ],
+  },
+  {
+    id: "2",
+    titulo: "Processo Seletivo - Administrativo 2026",
+    secretaria: "Secretaria de Administração",
+    dataAbertura: "2026-01-15",
+    dataEncerramento: "2026-02-15",
+    status: "aberto",
+    vagas: [
+      {
+        id: "2-1",
+        cargo: "Auxiliar Administrativo",
+        secretaria: "Secretaria de Administração",
+        quantidade: 8,
+        salario: "R$ 1.500,00",
+        cargaHoraria: "40h semanais",
+        requisitos: [
+          "Ensino Médio completo",
+          "Conhecimentos básicos em informática",
+        ],
+      },
+      {
+        id: "2-2",
+        cargo: "Técnico em Informática",
+        secretaria: "Secretaria de Administração",
+        quantidade: 5,
+        salario: "R$ 2.800,00",
+        cargaHoraria: "40h semanais",
+        requisitos: [
+          "Curso técnico em Informática",
+          "Conhecimentos avançados em sistemas",
+        ],
+      },
+    ],
+    descricao: "Processo seletivo para contratação de profissionais administrativos e de tecnologia da informação.",
+    editalUrl: "#",
+    documentosNecessarios: [
+      "RG e CPF",
+      "Comprovante de escolaridade",
+      "Certificado de cursos (quando aplicável)",
+    ],
+  },
+  {
+    id: "3",
+    titulo: "Processo Seletivo - Serviços Gerais 2025",
+    secretaria: "Secretaria de Administração",
+    dataAbertura: "2025-12-01",
+    dataEncerramento: "2026-01-01",
+    status: "encerrado",
+    vagas: [
+      {
+        id: "3-1",
+        cargo: "Auxiliar de Serviços Gerais",
+        secretaria: "Secretaria de Administração",
+        quantidade: 12,
+        salario: "R$ 1.200,00",
+        cargaHoraria: "40h semanais",
+        requisitos: [
+          "Ensino Fundamental completo",
+          "Boa saúde física",
+        ],
+      },
+    ],
+    descricao: "Processo seletivo para contratação de auxiliares de serviços gerais.",
+    editalUrl: "#",
+    documentosNecessarios: [
+      "RG e CPF",
+      "Comprovante de escolaridade",
+    ],
+  },
+];
+
+const mockMinhasInscricoes = [
+  {
+    id: "1",
+    processoId: "1",
+    processoTitulo: "Processo Seletivo - Saúde e Educação 2026",
+    vaga: "Agente Comunitário de Saúde",
+    secretaria: "Secretaria de Saúde",
+    dataInscricao: "2026-01-15",
+    status: "pendente",
+    statusLabel: "Em avaliação",
+    mensagensNaoLidas: 0,
+  },
+  {
+    id: "2",
+    processoId: "2",
+    processoTitulo: "Processo Seletivo - Administrativo 2026",
+    vaga: "Auxiliar Administrativo",
+    secretaria: "Secretaria de Administração",
+    dataInscricao: "2026-01-12",
+    status: "avaliado",
+    statusLabel: "Aprovado",
+    mensagensNaoLidas: 2,
+  },
+  {
+    id: "3",
+    processoId: "3",
+    processoTitulo: "Processo Seletivo - Serviços Gerais 2025",
+    vaga: "Auxiliar de Serviços Gerais",
+    secretaria: "Secretaria de Administração",
+    dataInscricao: "2025-12-15",
+    status: "avaliado",
+    statusLabel: "Reprovado",
+    mensagensNaoLidas: 0,
+  },
+];
+
+const statusInscricaoConfig: Record<string, { label: string; color: string }> = {
+  pendente: { label: "Em avaliação", color: "bg-yellow-100 text-yellow-700" },
+  avaliado: { label: "Avaliado", color: "bg-blue-100 text-blue-700" },
+};
+
+const statusConfig: Record<string, { label: string; color: string }> = {
+  aberto: { label: "Inscrições Abertas", color: "bg-green-100 text-green-700" },
+  encerrado: { label: "Encerrado", color: "bg-gray-100 text-gray-700" },
+  emAndamento: { label: "Em Andamento", color: "bg-blue-100 text-blue-700" },
+};
+
+export default function ProcessosSeletivos() {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
+  const [inscricaoDialogOpen, setInscricaoDialogOpen] = useState(false);
+  const [selectedProcesso, setSelectedProcesso] = useState<typeof mockProcessos[0] | null>(null);
+  const [inscricaoForm, setInscricaoForm] = useState({
+    nome: "",
+    cpf: "",
+    email: "",
+    telefone: "",
+    vagaSelecionada: "",
+    documentos: [] as File[],
+  });
+  const [mensagensDialogOpen, setMensagensDialogOpen] = useState(false);
+  const [selectedInscricao, setSelectedInscricao] = useState<typeof mockMinhasInscricoes[0] | null>(null);
+  const [novaMensagem, setNovaMensagem] = useState("");
+  const [anexosMensagem, setAnexosMensagem] = useState<File[]>([]);
+
+  // Se não estiver autenticado, mostra tela de login required
+  if (!isAuthenticated) {
+    return (
+      <Layout>
+        <div className="gov-container py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md mx-auto text-center"
+          >
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
+              <Lock className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">
+              Acesso Restrito
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              Para visualizar os processos seletivos e realizar inscrições, é necessário fazer login.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={() => navigate("/login")}>
+                Fazer Login
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/cadastro")}>
+                Criar Conta
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </Layout>
+    );
+  }
+
+  const processosAbertos = mockProcessos.filter((p) => p.status === "aberto");
+  const processosEncerrados = mockProcessos.filter((p) => p.status !== "aberto");
+
+  const handleIniciarInscricao = (processo: typeof mockProcessos[0]) => {
+    setSelectedProcesso(processo);
+    setInscricaoForm({ nome: "", cpf: "", email: "", telefone: "", vagaSelecionada: "", documentos: [] });
+    setInscricaoDialogOpen(true);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      setInscricaoForm((prev) => ({
+        ...prev,
+        documentos: [...prev.documentos, ...Array.from(files)],
+      }));
+    }
+  };
+
+  const handleSubmitInscricao = () => {
+    const vagaSelecionada = selectedProcesso?.vagas.find(v => v.id === inscricaoForm.vagaSelecionada);
+    toast({
+      title: "Inscrição realizada!",
+      description: `Sua inscrição para ${vagaSelecionada?.cargo} em ${selectedProcesso?.titulo} foi enviada com sucesso. Você receberá um e-mail de confirmação.`,
+    });
+    setInscricaoDialogOpen(false);
+  };
+
+  const handleAbrirMensagens = (inscricao: typeof mockMinhasInscricoes[0]) => {
+    setSelectedInscricao(inscricao);
+    setMensagensDialogOpen(true);
+  };
+
+  const handleEnviarMensagem = () => {
+    if (!novaMensagem.trim()) return;
+
+    toast({
+      title: "Mensagem enviada!",
+      description: "Sua mensagem foi enviada para o gestor responsável pela avaliação.",
+    });
+    setNovaMensagem("");
+    setAnexosMensagem([]);
+  };
+
+  const handleAnexoMensagem = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      setAnexosMensagem([...anexosMensagem, ...Array.from(files)]);
+    }
+  };
+
+  const formatCPF = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    return numbers
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})/, "$1-$2")
+      .replace(/(-\d{2})\d+?$/, "$1");
+  };
+
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length <= 11) {
+      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+    }
+    return value;
+  };
+
+  return (
+    <Layout>
+      <div className="gov-container py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            📋 Processos Seletivos
+          </h1>
+          <p className="text-muted-foreground">
+            Confira os processos seletivos com inscrições abertas e acompanhe suas inscrições
+          </p>
+        </motion.div>
+
+        <Tabs defaultValue="processos" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="processos">Processos Abertos</TabsTrigger>
+            <TabsTrigger value="inscricoes">Minhas Inscrições</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="processos" className="space-y-8">
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-green-100">
+                    <Briefcase className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{processosAbertos.length}</p>
+                    <p className="text-xs text-muted-foreground">Inscrições Abertas</p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-100">
+                    <Users className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {processosAbertos.reduce((acc, p) => acc + p.vagas.reduce((vagaAcc, vaga) => vagaAcc + vaga.quantidade, 0), 0)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Vagas Disponíveis</p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-purple-100">
+                    <Building2 className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {new Set(processosAbertos.map((p) => p.secretaria)).size}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Secretarias</p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-gray-100">
+                    <FileText className="h-5 w-5 text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{mockProcessos.length}</p>
+                    <p className="text-xs text-muted-foreground">Total de Processos</p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-green-100">
+                <Briefcase className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{processosAbertos.length}</p>
+                <p className="text-xs text-muted-foreground">Inscrições Abertas</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100">
+                <Users className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">
+                  {processosAbertos.reduce((acc, p) => acc + p.vagas.reduce((vagaAcc, vaga) => vagaAcc + vaga.quantidade, 0), 0)}
+                </p>
+                <p className="text-xs text-muted-foreground">Vagas Disponíveis</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-100">
+                <Building2 className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">
+                  {new Set(processosAbertos.map((p) => p.secretaria)).size}
+                </p>
+                <p className="text-xs text-muted-foreground">Secretarias</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gray-100">
+                <FileText className="h-5 w-5 text-gray-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{mockProcessos.length}</p>
+                <p className="text-xs text-muted-foreground">Total de Processos</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Processos Abertos */}
+        {processosAbertos.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-green-500"></span>
+              Inscrições Abertas
+            </h2>
+            <div className="space-y-4">
+              {processosAbertos.map((processo, index) => (
+                <motion.div
+                  key={processo.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className="overflow-hidden">
+                    <Collapsible
+                      open={expandedProcesso === processo.id}
+                      onOpenChange={() =>
+                        setExpandedProcesso(
+                          expandedProcesso === processo.id ? null : processo.id
+                        )
+                      }
+                    >
+                      <CardHeader className="pb-3">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className={statusConfig[processo.status].color}>
+                                {statusConfig[processo.status].label}
+                              </Badge>
+                              <Badge variant="outline">{processo.vagas.reduce((acc, vaga) => acc + vaga.quantidade, 0)} vagas</Badge>
+                            </div>
+                            <CardTitle className="text-lg">{processo.titulo}</CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {processo.secretaria}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              onClick={() => handleIniciarInscricao(processo)}
+                              className="gap-2"
+                            >
+                              <FileText className="h-4 w-4" />
+                              Fazer Inscrição
+                            </Button>
+                            <CollapsibleTrigger asChild>
+                              <Button variant="outline" size="icon">
+                                {expandedProcesso === processo.id ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </CollapsibleTrigger>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CollapsibleContent>
+                        <CardContent className="pt-0">
+                          <div className="border-t pt-4 space-y-4">
+                            {/* Info Básica */}
+                            <div className="flex items-center gap-2 text-sm">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="text-muted-foreground">Inscrições até</p>
+                                <p className="font-medium">
+                                  {new Date(processo.dataEncerramento).toLocaleDateString("pt-BR")}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Descrição */}
+                            <div>
+                              <h4 className="font-medium mb-2">Descrição</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {processo.descricao}
+                              </p>
+                            </div>
+
+                            {/* Vagas Disponíveis */}
+                            <div>
+                              <h4 className="font-medium mb-3">Vagas Disponíveis</h4>
+                              <div className="space-y-3">
+                                {processo.vagas.map((vaga) => (
+                                  <div key={vaga.id} className="p-3 border rounded-lg bg-muted/30">
+                                    <div className="flex items-start justify-between mb-2">
+                                      <div>
+                                        <h5 className="font-medium text-sm">{vaga.cargo}</h5>
+                                        <p className="text-xs text-muted-foreground">{vaga.secretaria}</p>
+                                      </div>
+                                      <Badge variant="outline" className="text-xs">
+                                        {vaga.quantidade} vaga{vaga.quantidade > 1 ? 's' : ''}
+                                      </Badge>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 text-xs">
+                                      <div>
+                                        <span className="text-muted-foreground">Salário:</span>
+                                        <span className="ml-1 font-medium">{vaga.salario}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-muted-foreground">Carga:</span>
+                                        <span className="ml-1 font-medium">{vaga.cargaHoraria}</span>
+                                      </div>
+                                    </div>
+                                    <div className="mt-2">
+                                      <p className="text-xs text-muted-foreground mb-1">Requisitos:</p>
+                                      <ul className="text-xs text-muted-foreground space-y-0.5">
+                                        {vaga.requisitos.map((req, i) => (
+                                          <li key={i} className="flex items-start gap-1">
+                                            <span>•</span>
+                                            <span>{req}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Documentos Necessários */}
+                            <div>
+                              <h4 className="font-medium mb-2">Documentos Necessários</h4>
+                              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                {processo.documentosNecessarios.map((doc, i) => (
+                                  <li key={i}>{doc}</li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            {/* Ações */}
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              <Button variant="outline" className="gap-2">
+                                <Download className="h-4 w-4" />
+                                Baixar Edital
+                              </Button>
+                              <Button
+                                onClick={() => handleIniciarInscricao(processo)}
+                                className="gap-2"
+                              >
+                                <FileText className="h-4 w-4" />
+                                Fazer Inscrição
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Processos Encerrados */}
+        {processosEncerrados.length > 0 && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-muted-foreground">
+              <span className="h-2 w-2 rounded-full bg-gray-400"></span>
+              Processos Encerrados
+            </h2>
+            <div className="space-y-4">
+              {processosEncerrados.map((processo, index) => (
+                <motion.div
+                  key={processo.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className="opacity-75">
+                    <CardHeader className="pb-3">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className={statusConfig[processo.status].color}>
+                              {statusConfig[processo.status].label}
+                            </Badge>
+                          </div>
+                          <CardTitle className="text-lg text-muted-foreground">
+                            {processo.titulo}
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {processo.secretaria}
+                          </p>
+                        </div>
+                        <Button variant="outline" className="gap-2">
+                          <Download className="h-4 w-4" />
+                          Ver Edital
+                        </Button>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {mockProcessos.length === 0 && (
+          <div className="bg-card rounded-xl border p-16 flex flex-col items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6">
+              <Briefcase className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Nenhum processo seletivo disponível
+            </h2>
+            <p className="text-muted-foreground text-center max-w-md">
+              No momento não há processos seletivos com inscrições abertas.
+            </p>
+          </div>
+        )}
+      </div>
+          </TabsContent>
+
+          <TabsContent value="inscricoes" className="space-y-8">
+            {/* Minhas Inscrições */}
+            {mockMinhasInscricoes.length > 0 ? (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold mb-4">Minhas Inscrições</h2>
+                {mockMinhasInscricoes.map((inscricao, index) => (
+                  <motion.div
+                    key={inscricao.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className={statusInscricaoConfig[inscricao.status].color}>
+                                {inscricao.statusLabel}
+                              </Badge>
+                              {inscricao.mensagensNaoLidas > 0 && (
+                                <Badge variant="destructive">
+                                  {inscricao.mensagensNaoLidas} mensagem{inscricao.mensagensNaoLidas > 1 ? 'ns' : ''} nova{inscricao.mensagensNaoLidas > 1 ? 's' : ''}
+                                </Badge>
+                              )}
+                            </div>
+                            <CardTitle className="text-lg">{inscricao.processoTitulo}</CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {inscricao.vaga} - {inscricao.secretaria}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Inscrito em {new Date(inscricao.dataInscricao).toLocaleDateString("pt-BR")}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleAbrirMensagens(inscricao)}
+                              className="gap-2"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                              Mensagens
+                              {inscricao.mensagensNaoLidas > 0 && (
+                                <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                                  {inscricao.mensagensNaoLidas}
+                                </Badge>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-card rounded-xl border p-16 flex flex-col items-center justify-center">
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6">
+                  <FileText className="h-10 w-10 text-muted-foreground" />
+                </div>
+                <h2 className="text-xl font-semibold text-foreground mb-2">
+                  Nenhuma inscrição encontrada
+                </h2>
+                <p className="text-muted-foreground text-center max-w-md">
+                  Você ainda não se inscreveu em nenhum processo seletivo.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      <Dialog open={inscricaoDialogOpen} onOpenChange={setInscricaoDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Fazer Inscrição</DialogTitle>
+            <DialogDescription>
+              {selectedProcesso?.titulo}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+            <div className="space-y-2">
+              <Label htmlFor="insc-nome">Nome Completo *</Label>
+              <Input
+                id="insc-nome"
+                value={inscricaoForm.nome}
+                onChange={(e) => setInscricaoForm({ ...inscricaoForm, nome: e.target.value })}
+                placeholder="Seu nome completo"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="insc-cpf">CPF *</Label>
+                <Input
+                  id="insc-cpf"
+                  value={inscricaoForm.cpf}
+                  onChange={(e) => setInscricaoForm({ ...inscricaoForm, cpf: formatCPF(e.target.value) })}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="insc-telefone">Telefone *</Label>
+                <Input
+                  id="insc-telefone"
+                  value={inscricaoForm.telefone}
+                  onChange={(e) => setInscricaoForm({ ...inscricaoForm, telefone: formatPhone(e.target.value) })}
+                  placeholder="(00) 00000-0000"
+                  maxLength={15}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="insc-vaga">Vaga Pretendida *</Label>
+              <Select
+                value={inscricaoForm.vagaSelecionada}
+                onValueChange={(value) => setInscricaoForm({ ...inscricaoForm, vagaSelecionada: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a vaga desejada" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedProcesso?.vagas.map((vaga) => (
+                    <SelectItem key={vaga.id} value={vaga.id}>
+                      {vaga.cargo} - {vaga.secretaria} ({vaga.quantidade} vaga{vaga.quantidade > 1 ? 's' : ''})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="insc-email">E-mail *</Label>
+              <Input
+                id="insc-email"
+                type="email"
+                value={inscricaoForm.email}
+                onChange={(e) => setInscricaoForm({ ...inscricaoForm, email: e.target.value })}
+                placeholder="seu@email.com"
+              />
+            </div>
+
+            {/* Documentos */}
+            <div className="space-y-2">
+              <Label>Documentos Necessários</Label>
+              <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
+                {selectedProcesso?.documentosNecessarios.map((doc, i) => (
+                  <p key={i} className="text-muted-foreground">• {doc}</p>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Anexar Documentos</Label>
+              <label className="flex items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+                <Upload className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  Clique para anexar documentos (PDF, imagens)
+                </span>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+              {inscricaoForm.documentos.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {inscricaoForm.documentos.map((file, i) => (
+                    <p key={i} className="text-sm text-muted-foreground">
+                      📎 {file.name}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInscricaoDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSubmitInscricao}
+              disabled={!inscricaoForm.nome || !inscricaoForm.cpf || !inscricaoForm.email || !inscricaoForm.vagaSelecionada}
+            >
+              Enviar Inscrição
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mensagens Dialog */}
+      <Dialog open={mensagensDialogOpen} onOpenChange={setMensagensDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Mensagens - {selectedInscricao?.processoTitulo}</DialogTitle>
+            <DialogDescription>
+              {selectedInscricao?.vaga} - {selectedInscricao?.secretaria}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+            {/* Histórico de mensagens (mock) */}
+            <div className="space-y-3">
+              <div className="flex justify-start">
+                <div className="bg-muted p-3 rounded-lg max-w-[80%]">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Gestor - 2 dias atrás</p>
+                  <p className="text-sm">Olá! Recebemos sua inscrição. Estamos analisando seus documentos.</p>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <div className="bg-primary p-3 rounded-lg max-w-[80%]">
+                  <p className="text-sm font-medium text-primary-foreground mb-1">Você - 1 dia atrás</p>
+                  <p className="text-sm text-primary-foreground">Obrigado! Há algo que preciso complementar?</p>
+                </div>
+              </div>
+              <div className="flex justify-start">
+                <div className="bg-muted p-3 rounded-lg max-w-[80%]">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Gestor - hoje</p>
+                  <p className="text-sm">Seus documentos estão em ordem. Entraremos em contato em breve com o resultado.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Nova mensagem */}
+            <div className="border-t pt-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Nova Mensagem</Label>
+                <Textarea
+                  value={novaMensagem}
+                  onChange={(e) => setNovaMensagem(e.target.value)}
+                  placeholder="Digite sua mensagem para o gestor..."
+                  rows={3}
+                />
+              </div>
+
+              {/* Anexos */}
+              <div className="space-y-2">
+                <Label>Anexar Documentos</Label>
+                <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+                  <Upload className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    Clique para anexar documentos (PDF, imagens)
+                  </span>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf"
+                    onChange={handleAnexoMensagem}
+                    className="hidden"
+                  />
+                </label>
+                {anexosMensagem.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {anexosMensagem.map((file, i) => (
+                      <p key={i} className="text-sm text-muted-foreground">
+                        📎 {file.name}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMensagensDialogOpen(false)}>
+              Fechar
+            </Button>
+            <Button
+              onClick={handleEnviarMensagem}
+              disabled={!novaMensagem.trim()}
+              className="gap-2"
+            >
+              <Send className="h-4 w-4" />
+              Enviar Mensagem
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Layout>
+  );
+}
